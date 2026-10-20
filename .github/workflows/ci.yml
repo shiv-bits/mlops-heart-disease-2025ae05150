@@ -1,0 +1,43 @@
+name: Heart Disease MLOps CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Download Heart Disease dataset
+        run: python -m src.mlops_heart.acquire_data
+
+      - name: Run exploratory data analysis
+        run: python -m src.mlops_heart.eda
+
+      - name: Train and log models
+        run: python -m src.mlops_heart.train
+
+      - name: Run automated tests
+        run: python -m pytest -v
+
+      - name: Build Docker image
+        run: docker build -t heart-disease-api:ci .
