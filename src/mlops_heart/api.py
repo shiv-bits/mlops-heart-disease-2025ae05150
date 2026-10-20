@@ -1,15 +1,35 @@
 
 from contextlib import asynccontextmanager
 from pathlib import Path
+from time import perf_counter
 from typing import Literal
 
 import joblib
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from prometheus_client import Counter, Histogram, make_asgi_app
 from pydantic import BaseModel, ConfigDict, Field
 
 ROOT = Path(__file__).resolve().parents[2]
 MODEL_PATH = ROOT / "artifacts" / "heart_disease_pipeline.joblib"
+
+HTTP_REQUESTS = Counter(
+    "heart_disease_http_requests_total",
+    "Total HTTP requests handled by the API",
+    ["method", "endpoint", "status"],
+)
+
+HTTP_REQUEST_DURATION = Histogram(
+    "heart_disease_http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "endpoint"],
+)
+
+PREDICTIONS = Counter(
+    "heart_disease_predictions_total",
+    "Total successful prediction requests",
+    ["prediction"],
+)
 
 
 class PatientFeatures(BaseModel):
@@ -46,9 +66,35 @@ app = FastAPI(
         "Educational machine-learning demonstration. "
         "This API is not intended for medical diagnosis."
     ),
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan,
 )
+
+
+@app.middleware("http")
+async def monitor_requests(request: Request, call_next):
+    # Exclude metrics scraping to prevent monitoring traffic from
+    # inflating the application's own request metrics.
+    if request.url.path.rstrip("/") == "/metrics":
+        return await call_next(request)
+
+    method = request.method
+    endpoint = request.url.path
+    started = perf_counter()
+    status = "500"
+
+    try:
+        response = await call_next(request)
+        status = str(response.status_code)
+        return response
+    finally:
+        HTTP_REQUESTS.labels(method, endpoint, status).inc()
+        HTTP_REQUEST_DURATION.labels(method, endpoint).observe(
+            perf_counter() - started
+        )
+
+
+app.mount("/metrics", make_asgi_app())
 
 
 @app.get("/health")
@@ -72,6 +118,8 @@ def predict(patient: PatientFeatures):
             status_code=500,
             detail="Prediction failed.",
         ) from exc
+
+    PREDICTIONS.labels(str(prediction)).inc()
 
     probability_presence = float(probabilities[1])
     confidence = float(probabilities[prediction])

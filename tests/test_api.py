@@ -64,3 +64,14 @@ def test_unexpected_feature_is_rejected():
         response = client.post("/predict", json=patient)
 
     assert response.status_code == 422
+
+
+def test_metrics_endpoint():
+    with TestClient(app) as client:
+        client.get("/health")
+        response = client.get("/metrics")
+
+    assert response.status_code == 200
+    assert "heart_disease_http_requests_total" in response.text
+    assert "heart_disease_http_request_duration_seconds" in response.text
+    assert "heart_disease_predictions_total" in response.text
