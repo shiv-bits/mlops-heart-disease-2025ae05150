@@ -8,7 +8,7 @@
     "roc_auc":0.9653679654,
     "cv_roc_auc":0.9027904463,
     "best_params":"{\"classifier__C\": 0.1, \"classifier__class_weight\": \"balanced\"}",
-    "run_id":"152c4ce9149f495183e5f04c646a98fe"
+    "run_id":"925c5a9444944c0e90603ba4d374910e"
   },
   {
     "model":"RandomForest",
@@ -19,6 +19,6 @@
     "roc_auc":0.9512987013,
     "cv_roc_auc":0.9017122169,
     "best_params":"{\"classifier__class_weight\": \"balanced\", \"classifier__max_depth\": 5, \"classifier__min_samples_leaf\": 1, \"classifier__n_estimators\": 200}",
-    "run_id":"cfd052e2fc8348ce9e4f367740fca22a"
+    "run_id":"aa69ce78e8ca44f99f0ec1d75ea243bd"
   }
 ]
