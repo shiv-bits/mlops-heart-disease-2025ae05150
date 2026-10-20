@@ -1,0 +1,3 @@
+model,accuracy,precision,recall,f1,roc_auc,cv_roc_auc,best_params,run_id
+LogisticRegression,0.8852459016393442,0.8387096774193549,0.9285714285714286,0.8813559322033898,0.9653679653679654,0.9027904462687071,"{""classifier__C"": 0.1, ""classifier__class_weight"": ""balanced""}",152c4ce9149f495183e5f04c646a98fe
+RandomForest,0.8852459016393442,0.8387096774193549,0.9285714285714286,0.8813559322033898,0.9512987012987013,0.9017122169296081,"{""classifier__class_weight"": ""balanced"", ""classifier__max_depth"": 5, ""classifier__min_samples_leaf"": 1, ""classifier__n_estimators"": 200}",cfd052e2fc8348ce9e4f367740fca22a
